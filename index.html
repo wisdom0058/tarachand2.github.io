@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TARACHAND MV SCHOOL — Attendance Register</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+<style>
+  :root{
+    --blue:#1e3a8a; --blue2:#2563eb; --ink:#0f172a; --muted:#64748b;
+    --line:#cbd5e1; --bg:#eef2f7; --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,Ubuntu,'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--ink)}
+
+  header.app{background:linear-gradient(135deg,#172554,#1e3a8a 55%,#2563eb);color:#fff;padding:14px 18px}
+  header.app h1{margin:0;font-size:20px;letter-spacing:1px}
+  header.app p{margin:3px 0 0;font-size:13px;opacity:.92}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 14px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:40}
+  .toolbar .group{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .toolbar .spacer{flex:1}
+  button{cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 12px;border-radius:8px;font-size:13px;font-weight:600;white-space:nowrap}
+  button:hover{background:#f8fafc}
+  button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+  button.primary:hover{background:var(--blue2)}
+  button.ghost{color:#b45309;border-color:#f59e0b44}
+  input[type=month]{padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+
+  .tabs{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .tabs button{border:none;border-radius:0;background:#f8fafc;padding:8px 15px;font-size:13px}
+  .tabs button.active{background:var(--blue);color:#fff}
+  .tabs button:not(.active):hover{background:#e2e8f0}
+
+  #factors{display:none;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px;font-weight:700;color:#334155;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:5px 10px}
+  #factors input{width:64px;padding:5px 6px;border:1px solid var(--line);border-radius:6px;font-size:13px;text-align:center}
+
+  #summary{display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px 4px}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--muted)}
+  .chip b{color:var(--ink)}
+  .chip.lp b{color:#047857}.chip.me b{color:#1d4ed8}.chip.gr b{color:#6d28d9}
+  .chip.exp b{color:#b45309}.chip.sav b{color:#047857}.chip.sav.neg b{color:#b91c1c}
+  .chip.sync{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+
+  .page{display:none}
+  .page.active{display:block}
+  .table-wrap{overflow:auto;margin:8px 14px 24px;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.08);max-height:calc(100vh - 235px)}
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:1120px}
+  thead th{position:sticky;background:#1e3a8a;color:#fff;font-size:11.5px;padding:7px 6px;border:1px solid #2a4a9e;z-index:10;white-space:nowrap}
+  thead tr:nth-child(1) th{top:0;height:30px}
+  thead tr:nth-child(2) th{top:31px}
+  th.lp-head{background:#065f46;border-color:#0a7a5c} th.me-head{background:#1d4ed8;border-color:#3b6de8}
+  th.exp-head{background:#92400e;border-color:#b45309}
+  td, tfoot th{border:1px solid #dbe2ea;padding:4px;font-size:13px;text-align:center}
+  tbody td.dt{font-weight:700;white-space:nowrap}
+  td.day{color:var(--muted);font-weight:600;white-space:nowrap}
+  tr.sunday td{background:#fff7ed}
+  tr.holiday td{background:#fef2f2 !important}
+  tr.today td{box-shadow:inset 0 0 0 2px #2563eb}
+  select.daytype{width:92px;padding:4px;border:1px solid var(--line);border-radius:6px;font-size:12px;background:#fff}
+  input.reason{width:132px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;font-size:12px}
+  input.att{width:48px;padding:5px 3px;border:1px solid var(--line);border-radius:6px;font-size:13px;text-align:center}
+  input.exp{width:88px;padding:5px 4px;border:1px solid var(--line);border-radius:6px;font-size:13px;text-align:center}
+  input:disabled{background:#f1f5f9 !important;color:#94a3b8}
+  input.att:focus, input.exp:focus, input.reason:focus{outline:2px solid var(--blue2);border-color:var(--blue2)}
+  td.tot-lp{font-weight:800;background:#ecfdf5;color:#047857}
+  td.tot-me{font-weight:800;background:#eff6ff;color:#1d4ed8}
+  td.tot-grand{font-weight:800;background:#f5f3ff;color:#6d28d9}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+  .pill.class{background:#dcfce7;color:#166534}
+  .pill.hol{background:#fee2e2;color:#991b1b}
+  td.st-lp{font-weight:800;background:#ecfdf5;color:#047857}
+  td.st-me{font-weight:800;background:#eff6ff;color:#1d4ed8}
+  td.inr{font-variant-numeric:tabular-nums;white-space:nowrap}
+  td.amt-tot{font-weight:800;background:#f5f3ff;color:#6d28d9}
+  td.saving{font-weight:800;white-space:nowrap}
+  td.saving.pos{color:#047857}
+  td.saving.neg{color:#b91c1c;background:#fef2f2}
+  td.reasonTxt{font-size:12px;color:#334155}
+  tfoot th{background:#f8fafc;font-weight:800;position:sticky;bottom:0;z-index:5;white-space:nowrap}
+  tfoot tr.avg th{font-weight:700;color:var(--muted);background:#fff}
+
+  .print-head{display:none}
+  .print-sign{display:none}
+
+  footer.app{padding:0 14px 24px;font-size:11.5px;color:var(--muted)}
+
+  #toast{position:fixed;right:16px;bottom:16px;padding:11px 16px;border-radius:10px;font-size:13px;font-weight:600;color:#fff;background:#334155;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;transform:translateY(8px);z-index:200;max-width:min(440px,90vw)}
+  #toast.show{opacity:1;transform:translateY(0)}
+  #toast.ok{background:#047857}
+  #toast.err{background:#b91c1c}
+
+  @media print{
+    header.app,.toolbar,#summary,#toast,footer.app,.no-print{display:none !important}
+    body{background:#fff}
+    .print-head{display:block;text-align:center;margin:0 0 8px}
+    .print-head h1{margin:0;font-size:18px;letter-spacing:1px}
+    .print-head p{margin:2px 0;font-size:12px}
+    .table-wrap{margin:0;border:none;box-shadow:none;overflow:visible;max-height:none}
+    table{min-width:0;font-size:10px}
+    thead th{position:static;background:#fff;color:#000;border:1px solid #000}
+    td,tfoot th{border:1px solid #000;font-size:10px;padding:3px}
+    tfoot th{position:static}
+    tr.sunday td,tr.holiday td,td.saving.neg{background:#fff !important}
+    tr.today td{box-shadow:none}
+    select.daytype, input.reason, input.att, input.exp{border:none !important;appearance:none;-webkit-appearance:none;width:auto;background:transparent !important}
+    .pill{background:none;color:#000;padding:0}
+    @page{size:A4 landscape;margin:9mm}
+    .print-sign{display:flex !important;justify-content:space-between;margin-top:46px;font-size:12px;padding:0 30px}
+    .print-sign div{text-align:center;line-height:1.7}
+  }
+</style>
+</head>
+<body>
+
+<header class="app">
+  <h1>🏫 TARACHAND MV SCHOOL</h1>
+  <p>Monthly Attendance &amp; Expenditure Register &nbsp;•&nbsp; LP: Class I–V &nbsp;•&nbsp; ME: Class VI–VIII</p>
+</header>
+
+<div class="toolbar no-print">
+  <div class="tabs">
+    <button data-page="att" class="active">📋 Attendance</button>
+    <button data-page="exp">🧾 Expenditure</button>
+  </div>
+  <div class="group">
+    <button id="prevBtn" title="Previous month">◀</button>
+    <input type="month" id="month">
+    <button id="nextBtn" title="Next month">▶</button>
+  </div>
+  <button id="pdfBtn" class="primary">⬇ Download PDF</button>
+  <button id="syncBtn" class="primary" style="background:#0f766e;border-color:#0f766e">💾 Synchronise</button>
+  <button id="loadBtn">📂 Load file</button>
+  <input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+  <div id="factors">
+    ⚙ Rates per student:&nbsp;
+    LP ₹ <input id="fLp" type="number" min="0" step="0.01" value="6.78">
+    &nbsp;ME ₹ <input id="fMe" type="number" min="0" step="0.01" value="10.17">
+  </div>
+  <div class="spacer"></div>
+  <button id="clearBtn" class="ghost" title="Clear current month">🗑 Clear month</button>
+</div>
+
+<div id="summary" class="no-print"></div>
+
+<div class="print-head">
+  <h1>TARACHAND MV SCHOOL</h1>
+  <p id="printSub">Monthly Students' Attendance Register</p>
+  <p id="printMonth"></p>
+  <p style="font-size:10px;color:#444" id="printNote">LP = Lower Primary (Class I–V) &nbsp;•&nbsp; ME = Middle English (Class VI–VIII)</p>
+</div>
+
+<!-- ==================== PAGE 1 : ATTENDANCE ==================== -->
+<section id="page-att" class="page active">
+  <div class="table-wrap">
+    <table id="reg">
+      <thead>
+        <tr>
+          <th rowspan="2">Date</th>
+          <th rowspan="2">Day</th>
+          <th rowspan="2">Class Day /<br>Holiday</th>
+          <th rowspan="2">Reason<br>(if Holiday)</th>
+          <th colspan="5" class="lp-head">LP Section — Class I to V</th>
+          <th rowspan="2" class="lp-head">Total<br>LP</th>
+          <th colspan="3" class="me-head">ME Section — Class VI to VIII</th>
+          <th rowspan="2" class="me-head">Total<br>ME</th>
+          <th rowspan="2">Grand<br>Total</th>
+        </tr>
+        <tr>
+          <th class="lp-head">I</th><th class="lp-head">II</th><th class="lp-head">III</th><th class="lp-head">IV</th><th class="lp-head">V</th>
+          <th class="me-head">VI</th><th class="me-head">VII</th><th class="me-head">VIII</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot>
+        <tr id="totRow">
+          <th colspan="4" style="text-align:left;padding-left:10px">MONTHLY TOTAL</th>
+          <th id="f0"></th><th id="f1"></th><th id="f2"></th><th id="f3"></th><th id="f4"></th>
+          <th id="flp" style="background:#ecfdf5;color:#047857"></th>
+          <th id="f5"></th><th id="f6"></th><th id="f7"></th>
+          <th id="fme" style="background:#eff6ff;color:#1d4ed8"></th>
+          <th id="fgr" style="background:#f5f3ff;color:#6d28d9"></th>
+        </tr>
+        <tr class="avg" id="avgRow">
+          <th colspan="4" style="text-align:left;padding-left:10px">AVERAGE / CLASS DAY</th>
+          <th id="a0"></th><th id="a1"></th><th id="a2"></th><th id="a3"></th><th id="a4"></th>
+          <th id="alp"></th>
+          <th id="a5"></th><th id="a6"></th><th id="a7"></th>
+          <th id="ame"></th>
+          <th id="agr"></th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</section>
+
+<!-- ==================== PAGE 2 : EXPENDITURE ==================== -->
+<section id="page-exp" class="page">
+  <div class="table-wrap">
+    <table id="expReg">
+      <thead>
+        <tr>
+          <th rowspan="2">Date</th>
+          <th rowspan="2">Day</th>
+          <th rowspan="2">Class Day /<br>Holiday</th>
+          <th rowspan="2">Reason<br>(if Holiday)</th>
+          <th rowspan="2" class="exp-head">Expenditure<br>(₹)</th>
+          <th colspan="2" class="lp-head">LP Section — Class I to V</th>
+          <th colspan="2" class="me-head">ME Section — Class VI to VIII</th>
+          <th rowspan="2">Total<br>Entitled (₹)</th>
+          <th rowspan="2">Saving<br>(₹)</th>
+        </tr>
+        <tr>
+          <th class="lp-head">Total LP</th><th class="lp-head" id="thLpRate">LP Amount (×6.78)</th>
+          <th class="me-head">Total ME</th><th class="me-head" id="thMeRate">ME Amount (×10.17)</th>
+        </tr>
+      </thead>
+      <tbody id="tbody2"></tbody>
+      <tfoot>
+        <tr>
+          <th colspan="4" style="text-align:left;padding-left:10px">MONTHLY TOTAL</th>
+          <th id="e_exp" style="background:#fff7ed;color:#b45309"></th>
+          <th id="e_lp" style="background:#ecfdf5;color:#047857"></th>
+          <th id="e_lpa" style="background:#ecfdf5;color:#047857"></th>
+          <th id="e_me" style="background:#eff6ff;color:#1d4ed8"></th>
+          <th id="e_mea" style="background:#eff6ff;color:#1d4ed8"></th>
+          <th id="e_tot" style="background:#f5f3ff;color:#6d28d9"></th>
+          <th id="e_sav"></th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</section>
+
+<div class="print-sign">
+  <div>_______________________________<br>Signature of Head Master / Head Mistress</div>
+  <div>_______________________________<br>Date &amp; School Seal</div>
+</div>
+
+<footer class="app no-print">
+  Made by Sandip Chakraborty
+</footer>
+
+<div id="toast"></div>
+
+<script>
+/* ================= TARACHAND MV SCHOOL — Attendance & Expenditure ================= */
+const LS_KEY = 'tcms_attendance_v1';
+const DB_FILE = 'attendance-data.json';
+const CLASSES = ['I','II','III','IV','V','VI','VII','VIII'];
+const DAYNAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHNAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const $ = s => document.querySelector(s);
+const tbody = $('#tbody');
+const tbody2 = $('#tbody2');
+
+let state = {
+  months: {},                                  // "YYYY-MM" -> { "YYYY-MM-DD": {type, reason, c:[8]} }
+  exp: {},                                     // "YYYY-MM" -> { "YYYY-MM-DD": number }
+  factors: { lp: 6.78, me: 10.17 }             // editable rate per student
+};
+let curMonth = null;
+let activePage = 'att';
+let saveTimer = null;
+let toastTimer = null;
+
+function toast(msg, ok = true){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'show ' + (ok ? 'ok' : 'err');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = '', 3800);
+}
+
+/* ---------- storage (guarded: sandboxed previews may block localStorage) ---------- */
+function lsLoad(){ try{ const s = localStorage.getItem(LS_KEY); if(s){ const j = JSON.parse(s); state = Object.assign(state, j); state.factors = Object.assign({lp:6.78,me:10.17}, j.factors||{}); } }catch(e){} }
+function lsSave(){ state.savedAt = new Date().toISOString(); try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+function debounceSave(){ clearTimeout(saveTimer); saveTimer = setTimeout(lsSave, 400); }
+
+/* ---------- helpers ---------- */
+const pad = n => String(n).padStart(2,'0');
+const isoOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+function monthDates(ym){
+  const [y,m] = ym.split('-').map(Number);
+  const n = new Date(y, m, 0).getDate();
+  const out = [];
+  for(let d=1; d<=n; d++) out.push(new Date(y, m-1, d));
+  return out;
+}
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const r2 = n => Math.round(n * 100) / 100;
+const fmtINR = n => '₹' + Number(r2(n)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt2 = n => Number(r2(n)).toFixed(2);
+
+/* ---------- data ---------- */
+function ensureMonth(ym){
+  if(!state.months[ym]) state.months[ym] = {};
+  const m = state.months[ym];
+  for(const dt of monthDates(ym)){
+    const k = isoOf(dt);
+    if(!m[k]){
+      const isSun = dt.getDay() === 0;
+      m[k] = { type: isSun ? 'holiday' : 'class', reason: isSun ? 'Sunday' : '', c:['','','','','','','',''] };
+    }
+  }
+}
+function rowSums(rec){
+  if(rec.type === 'holiday') return null;
+  const vals = rec.c.map(v => (v === '' || v == null) ? null : (Number(v) || 0));
+  if(vals.every(v => v === null)) return null;
+  const n = i => vals[i] === null ? 0 : vals[i];
+  const lp = n(0)+n(1)+n(2)+n(3)+n(4);
+  const me = n(5)+n(6)+n(7);
+  return { lp, me, gr: lp + me };
+}
+function computeMonthStats(){
+  const m = state.months[curMonth] || {};
+  const clsSums = Array(8).fill(0);
+  let classDays = 0, holDays = 0;
+  Object.keys(m).forEach(k => {
+    const r = m[k];
+    if(r.type === 'holiday'){ holDays++; return; }
+    classDays++;
+    r.c.forEach((v,i) => { if(v !== '' && v != null) clsSums[i] += Number(v) || 0; });
+  });
+  const lp = clsSums.slice(0,5).reduce((a,b)=>a+b,0);
+  const me = clsSums.slice(5).reduce((a,b)=>a+b,0);
+  return { clsSums, classDays, holDays, lp, me, gr: lp + me };
+}
+function computeExpStats(){
+  const m = state.months[curMonth] || {}, ex = state.exp[curMonth] || {};
+  const { lp: fLp, me: fMe } = state.factors;
+  let lpSt = 0, meSt = 0, expT = 0, classDays = 0, holDays = 0, daysWithData = 0;
+  Object.keys(m).forEach(k => {
+    const rec = m[k];
+    if(rec.type === 'holiday'){ holDays++; return; }
+    classDays++;
+    if(ex[k] != null) expT += Number(ex[k]) || 0;
+    const s = rowSums(rec);
+    if(s){ daysWithData++; lpSt += s.lp; meSt += s.me; }
+  });
+  const lpAmt = r2(lpSt * fLp), meAmt = r2(meSt * fMe), total = r2(lpAmt + meAmt);
+  const saving = r2(total - expT);
+  return { lpSt, meSt, lpAmt, meAmt, total, expT: r2(expT), saving, classDays, holDays, daysWithData };
+}
+
+/* ================= PAGE 1 : ATTENDANCE ================= */
+function attCells(rec, hol, from, to){
+  let s = '';
+  for(let i = from; i <= to; i++){
+    const v = rec.c[i];
+    s += `<td><input class="att" type="number" min="0" step="1" inputmode="numeric" autocomplete="off" data-ci="${i}" value="${v===''||v==null?'':v}"${hol?' disabled':''}></td>`;
+  }
+  return s;
+}
+function totalsTxt(rec){
+  if(rec.type === 'holiday') return ['–','–','–'];
+  const s = rowSums(rec);
+  return s ? [s.lp, s.me, s.gr] : ['','',''];
+}
+function renderAtt(){
+  ensureMonth(curMonth);
+  const m = state.months[curMonth];
+  const today = isoOf(new Date());
+  let html = '';
+  for(const dt of monthDates(curMonth)){
+    const k = isoOf(dt), rec = m[k];
+    const isSun = dt.getDay() === 0, hol = rec.type === 'holiday';
+    const cls = [isSun?'sunday':'', hol?'holiday':'', k===today?'today':''].filter(Boolean).join(' ');
+    const [lp,me,gr] = totalsTxt(rec);
+    html += `<tr class="${cls}" data-date="${k}">
+      <td class="dt">${pad(dt.getDate())}</td>
+      <td class="day">${DAYNAMES[dt.getDay()]}</td>
+      <td><select class="daytype" autocomplete="off">
+        <option value="class"${hol?'':' selected'}>Class Day</option>
+        <option value="holiday"${hol?' selected':''}>Holiday</option>
+      </select></td>
+      <td><input class="reason" type="text" placeholder="Reason…" autocomplete="off" value="${esc(rec.reason||'')}"${hol?'':' disabled'}></td>
+      ${attCells(rec, hol, 0, 4)}
+      <td class="tot-lp">${lp}</td>
+      ${attCells(rec, hol, 5, 7)}
+      <td class="tot-me">${me}</td>
+      <td class="tot-grand">${gr}</td>
+    </tr>`;
+  }
+  tbody.innerHTML = html;
+  updateAttFooter();
+}
+function updateRowTotals(tr, rec){
+  const [lp,me,gr] = totalsTxt(rec);
+  tr.querySelector('.tot-lp').textContent = lp;
+  tr.querySelector('.tot-me').textContent = me;
+  tr.querySelector('.tot-grand').textContent = gr;
+}
+function paintRow(tr, rec){
+  const hol = rec.type === 'holiday';
+  tr.classList.toggle('holiday', hol);
+  tr.querySelectorAll('.att').forEach(inp => { inp.disabled = hol; if(hol) inp.value = ''; });
+  tr.querySelector('.reason').disabled = !hol;
+  updateRowTotals(tr, rec);
+}
+function updateAttFooter(){
+  const st = computeMonthStats();
+  const avg = v => st.classDays ? (v / st.classDays).toFixed(1) : '–';
+  for(let i = 0; i < 8; i++){
+    $('#f'+i).textContent = st.clsSums[i] || '';
+    $('#a'+i).textContent = st.classDays ? avg(st.clsSums[i]) : '';
+  }
+  $('#flp').textContent = st.lp || '';  $('#fme').textContent = st.me || '';  $('#fgr').textContent = st.gr || '';
+  $('#alp').textContent = st.classDays ? avg(st.lp) : '';
+  $('#ame').textContent = st.classDays ? avg(st.me) : '';
+  $('#agr').textContent = st.classDays ? avg(st.gr) : '';
+  $('#avgRow th:first-child').textContent = `AVERAGE / CLASS DAY (${st.classDays} days)`;
+  if(activePage === 'att'){
+    $('#summary').innerHTML =
+      `<span class="chip">Class days: <b>${st.classDays}</b></span>
+       <span class="chip">Holidays: <b>${st.holDays}</b></span>
+       <span class="chip lp">LP (I–V) total: <b>${st.lp}</b></span>
+       <span class="chip me">ME (VI–VIII) total: <b>${st.me}</b></span>
+       <span class="chip gr">Grand total: <b>${st.gr}</b></span>`;
+  }
+}
+
+tbody.addEventListener('input', e => {
+  const tr = e.target.closest('tr'); if(!tr) return;
+  const rec = state.months[curMonth][tr.dataset.date];
+  if(e.target.classList.contains('att')){
+    let v = e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0);
+    rec.c[+e.target.dataset.ci] = v;
+    updateRowTotals(tr, rec);
+    updateAttFooter();
+    renderExp();                    // keep expenditure page synchronised
+    debounceSave();
+  } else if(e.target.classList.contains('reason')){
+    rec.reason = e.target.value;
+    renderExp();
+    debounceSave();
+  }
+});
+tbody.addEventListener('change', e => {
+  if(e.target.classList.contains('daytype')){
+    const tr = e.target.closest('tr');
+    const rec = state.months[curMonth][tr.dataset.date];
+    rec.type = e.target.value;
+    if(rec.type === 'holiday') rec.c = rec.c.map(() => '');
+    paintRow(tr, rec);
+    updateAttFooter();
+    renderExp();                    // keep expenditure page synchronised
+    lsSave();
+  } else if(e.target.classList.contains('att')){
+    e.target.value = e.target.value === '' ? '' : Math.max(0, parseInt(e.target.value, 10) || 0);
+  }
+});
+tbody.addEventListener('keydown', e => {
+  if(!e.target.classList.contains('att')) return;
+  const ci = e.target.dataset.ci, tr = e.target.closest('tr');
+  let t = null;
+  if(e.key === 'Enter' || e.key === 'ArrowDown'){ const n = tr.nextElementSibling; if(n) t = n.querySelector(`[data-ci="${ci}"]`); }
+  else if(e.key === 'ArrowUp'){ const p = tr.previousElementSibling; if(p) t = p.querySelector(`[data-ci="${ci}"]`); }
+  if(t && !t.disabled){ e.preventDefault(); t.focus(); t.select(); }
+});
+
+/* ================= PAGE 2 : EXPENDITURE (auto-synced from page 1) ================= */
+function expRowData(rec){
+  // returns null → holiday ; {blank:true} → class day without attendance ; else full calc
+  if(rec.type === 'holiday') return null;
+  const s = rowSums(rec);
+  if(!s) return { blank: true };
+  const { lp: fLp, me: fMe } = state.factors;
+  const lpAmt = r2(s.lp * fLp), meAmt = r2(s.me * fMe), total = r2(lpAmt + meAmt);
+  return { s, lpAmt, meAmt, total };
+}
+function renderExp(){
+  ensureMonth(curMonth);
+  const m = state.months[curMonth], ex = state.exp[curMonth] || {};
+  const today = isoOf(new Date());
+  $('#thLpRate').textContent = `LP Amount (×${state.factors.lp})`;
+  $('#thMeRate').textContent = `ME Amount (×${state.factors.me})`;
+  let html = '';
+  for(const dt of monthDates(curMonth)){
+    const k = isoOf(dt), rec = m[k];
+    const isSun = dt.getDay() === 0, hol = rec.type === 'holiday';
+    const cls = [isSun?'sunday':'', hol?'holiday':'', k===today?'today':''].filter(Boolean).join(' ');
+    const d = expRowData(rec);
+    const exp = ex[k];
+    let lpTxt='', lpAmt='', meTxt='', meAmt='', totAmt='', savTxt='', savCls='';
+    if(d === null){ lpTxt = lpAmt = meTxt = meAmt = totAmt = savTxt = '–'; }
+    else if(!d.blank){
+      lpTxt = d.s.lp; meTxt = d.s.me;
+      lpAmt = fmtINR(d.lpAmt); meAmt = fmtINR(d.meAmt); totAmt = fmtINR(d.total);
+      const sv = r2(d.total - (exp == null ? 0 : exp));
+      savTxt = fmtINR(sv); savCls = sv < 0 ? 'neg' : 'pos';
+    }
+    html += `<tr class="${cls}" data-date="${k}">
+      <td class="dt">${pad(dt.getDate())}</td>
+      <td class="day">${DAYNAMES[dt.getDay()]}</td>
+      <td><span class="pill ${hol?'hol':'class'}">${hol?'Holiday':'Class Day'}</span></td>
+      <td class="reasonTxt">${hol ? esc(rec.reason || '—') : '—'}</td>
+      <td><input class="exp" type="number" min="0" step="0.01" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${exp==null?'':exp}"${hol?' disabled':''}></td>
+      <td class="st-lp">${lpTxt}</td>
+      <td class="inr">${lpAmt}</td>
+      <td class="st-me">${meTxt}</td>
+      <td class="inr">${meAmt}</td>
+      <td class="amt-tot">${totAmt}</td>
+      <td class="saving ${savCls}">${savTxt}</td>
+    </tr>`;
+  }
+  tbody2.innerHTML = html;
+  updateExpFooter();
+}
+function updateExpRow(tr){
+  const k = tr.dataset.date;
+  const rec = state.months[curMonth][k];
+  const d = expRowData(rec);
+  const exp = (state.exp[curMonth] || {})[k];
+  const sav = tr.querySelector('.saving');
+  if(!d || d.blank){ sav.textContent = d ? '' : '–'; sav.className = 'saving'; return; }
+  const sv = r2(d.total - (exp == null ? 0 : exp));
+  sav.textContent = fmtINR(sv);
+  sav.className = 'saving ' + (sv < 0 ? 'neg' : 'pos');
+}
+function updateExpFooter(){
+  const st = computeExpStats();
+  $('#e_exp').textContent = st.expT ? fmtINR(st.expT) : '';
+  $('#e_lp').textContent  = st.lpSt || '';
+  $('#e_lpa').textContent = st.lpSt ? fmtINR(st.lpAmt) : '';
+  $('#e_me').textContent  = st.meSt || '';
+  $('#e_mea').textContent = st.meSt ? fmtINR(st.meAmt) : '';
+  $('#e_tot').textContent = st.total ? fmtINR(st.total) : '';
+  const eSav = $('#e_sav');
+  eSav.textContent = (st.total || st.expT) ? fmtINR(st.saving) : '';
+  eSav.style.color = st.saving < 0 ? '#b91c1c' : '#047857';
+  eSav.style.background = st.saving < 0 ? '#fef2f2' : '#ecfdf5';
+  if(activePage === 'exp'){
+    $('#summary').innerHTML =
+      `<span class="chip sync">⟳ Auto-synced from Attendance page</span>
+       <span class="chip">Class days: <b>${st.classDays}</b></span>
+       <span class="chip">Holidays: <b>${st.holDays}</b></span>
+       <span class="chip lp">LP students: <b>${st.lpSt}</b> → <b>${fmtINR(st.lpAmt)}</b></span>
+       <span class="chip me">ME students: <b>${st.meSt}</b> → <b>${fmtINR(st.meAmt)}</b></span>
+       <span class="chip gr">Total entitled: <b>${fmtINR(st.total)}</b></span>
+       <span class="chip exp">Expenditure: <b>${fmtINR(st.expT)}</b></span>
+       <span class="chip sav ${st.saving<0?'neg':''}">Saving: <b>${fmtINR(st.saving)}</b></span>`;
+  }
+}
+tbody2.addEventListener('input', e => {
+  if(!e.target.classList.contains('exp')) return;
+  const tr = e.target.closest('tr'); if(!tr) return;
+  const k = tr.dataset.date;
+  if(!state.exp[curMonth]) state.exp[curMonth] = {};
+  if(e.target.value === '') delete state.exp[curMonth][k];
+  else state.exp[curMonth][k] = Math.max(0, parseFloat(e.target.value) || 0);
+  updateExpRow(tr);
+  updateExpFooter();
+  debounceSave();
+});
+tbody2.addEventListener('keydown', e => {
+  if(!e.target.classList.contains('exp')) return;
+  const tr = e.target.closest('tr');
+  let t = null;
+  if(e.key === 'Enter' || e.key === 'ArrowDown'){ const n = tr.nextElementSibling; if(n) t = n.querySelector('.exp'); }
+  else if(e.key === 'ArrowUp'){ const p = tr.previousElementSibling; if(p) t = p.querySelector('.exp'); }
+  if(t && !t.disabled){ e.preventDefault(); t.focus(); t.select(); }
+});
+
+/* ---------- rate (factor) inputs ---------- */
+function bindFactor(id, key){
+  $(id).addEventListener('input', e => {
+    const v = parseFloat(e.target.value);
+    if(!isNaN(v) && v >= 0){ state.factors[key] = v; renderExp(); debounceSave(); }
+  });
+}
+bindFactor('#fLp', 'lp');
+bindFactor('#fMe', 'me');
+
+/* ---------- tabs ---------- */
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => setPage(b.dataset.page)));
+function setPage(p){
+  activePage = p;
+  document.querySelectorAll('.page').forEach(el => el.classList.toggle('active', el.id === 'page-' + p));
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('active', x.dataset.page === p));
+  $('#factors').style.display = p === 'exp' ? 'flex' : 'none';
+  if(p === 'exp'){ renderExp(); updateExpFooter(); } else { updateAttFooter(); }
+  const [y, mm] = curMonth.split('-').map(Number);
+  const mLabel = `${MONTHNAMES[mm-1]} ${y}`;
+  document.title = p === 'exp' ? `TARACHAND MV SCHOOL Expenditure ${mLabel}` : `TARACHAND MV SCHOOL Attendance ${mLabel}`;
+  $('#printSub').textContent = p === 'exp' ? 'Monthly Expenditure Statement' : "Monthly Students' Attendance Register";
+  $('#printNote').innerHTML = p === 'exp'
+    ? `Rates: LP ₹${state.factors.lp}/student &nbsp;•&nbsp; ME ₹${state.factors.me}/student &nbsp;•&nbsp; Saving = Total Entitled − Expenditure`
+    : 'LP = Lower Primary (Class I–V) &nbsp;•&nbsp; ME = Middle English (Class VI–VIII)';
+}
+
+/* ---------- toolbar ---------- */
+function renderAll(){
+  renderAtt();
+  renderExp();
+  const [y, mm] = curMonth.split('-').map(Number);
+  $('#printMonth').textContent = `Month: ${MONTHNAMES[mm-1]} ${y}`;
+  setPage(activePage);
+}
+$('#month').addEventListener('change', () => { curMonth = $('#month').value; renderAll(); lsSave(); });
+function shiftMonth(delta){
+  const [y,m] = curMonth.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  $('#month').value = `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+  curMonth = $('#month').value; renderAll(); lsSave();
+}
+$('#prevBtn').onclick = () => shiftMonth(-1);
+$('#nextBtn').onclick = () => shiftMonth(1);
+$('#clearBtn').onclick = () => {
+  const [y, mm] = curMonth.split('-').map(Number);
+  const label = `${MONTHNAMES[mm-1]} ${y}`;
+  if(activePage === 'att'){
+    if(confirm(`Clear all ATTENDANCE data of ${label}?`)){ delete state.months[curMonth]; renderAll(); lsSave(); }
+  } else {
+    if(confirm(`Clear all EXPENDITURE entries of ${label}?`)){ delete state.exp[curMonth]; renderExp(); lsSave(); }
+  }
+};
+
+/* ================= PDF export ================= */
+function monthLabel(){ const [y,mm] = curMonth.split('-').map(Number); return `${MONTHNAMES[mm-1]} ${y}`; }
+function docHeader(doc, W, title, note){
+  doc.setFont('helvetica','bold'); doc.setFontSize(16); doc.setTextColor(30,58,138);
+  doc.text('TARACHAND MV SCHOOL', W/2, 38, { align:'center' });
+  doc.setFontSize(11.5); doc.setTextColor(30,41,59);
+  doc.text(`${title} — ${monthLabel()}`, W/2, 56, { align:'center' });
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(100,116,139);
+  doc.text(note, W/2, 70, { align:'center' });
+}
+function docSign(doc, W){
+  const fy = doc.autoTable.previous.finalY + 48;
+  doc.setFontSize(10); doc.setTextColor(15,23,42);
+  doc.text('_______________________________', 60, fy);
+  doc.text('Signature of Head Master / Head Mistress', 60, fy + 14);
+  doc.text('_______________________________', W - 260, fy);
+  doc.text('Date & School Seal', W - 260, fy + 14);
+}
+function exportAttPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  docHeader(doc, W, "Monthly Students' Attendance Register", 'LP = Lower Primary (Class I-V)   •   ME = Middle English (Class VI-VIII)');
+  const head = [
+    [ {content:'Date',rowSpan:2},{content:'Day',rowSpan:2},{content:'Class Day / Holiday',rowSpan:2},{content:'Reason (if Holiday)',rowSpan:2},
+      {content:'LP Section — Class I to V',colSpan:5},{content:'Total LP',rowSpan:2},
+      {content:'ME Section — Class VI to VIII',colSpan:3},{content:'Total ME',rowSpan:2},{content:'Grand Total',rowSpan:2} ],
+    ['I','II','III','IV','V','VI','VII','VIII']
+  ];
+  const m = state.months[curMonth];
+  const body = monthDates(curMonth).map(dt => {
+    const rec = m[isoOf(dt)], hol = rec.type === 'holiday', s = rowSums(rec);
+    const cells = [0,1,2,3,4,5,6,7].map(i => hol ? '–' : (rec.c[i] === '' || rec.c[i] == null ? '' : String(rec.c[i])));
+    return [ pad(dt.getDate()), DAYNAMES[dt.getDay()], hol ? 'Holiday' : 'Class Day', hol ? (rec.reason || '') : '—',
+             ...cells, hol ? '–' : (s ? s.lp : ''), hol ? '–' : (s ? s.me : ''), hol ? '–' : (s ? s.gr : '') ];
+  });
+  const st = computeMonthStats();
+  const avg = v => st.classDays ? (v / st.classDays).toFixed(1) : '–';
+  const foot = [
+    [ {content:'MONTHLY TOTAL',colSpan:4,styles:{halign:'left'}}, ...st.clsSums.map(String), String(st.lp), String(st.me), String(st.gr) ],
+    [ {content:`AVERAGE / CLASS DAY (${st.classDays} class days, ${st.holDays} holidays)`,colSpan:4,styles:{halign:'left'}},
+      ...st.clsSums.map(avg), avg(st.lp), avg(st.me), avg(st.gr) ]
+  ];
+  doc.autoTable({
+    startY: 82, head, body, foot,
+    styles: { fontSize: 7.8, cellPadding: 2.5, halign: 'center', valign: 'middle', lineColor: [160,174,192], lineWidth: 0.4 },
+    headStyles: { fillColor: [30,58,138], textColor: 255, fontSize: 7.8, fontStyle: 'bold' },
+    footStyles: { fillColor: [241,245,249], textColor: 15, fontStyle: 'bold' },
+    columnStyles: { 0:{cellWidth:26}, 1:{cellWidth:26}, 2:{cellWidth:52}, 3:{cellWidth:70} },
+    didParseCell: d => { if(d.section === 'body' && d.row.raw[2] === 'Holiday') d.cell.styles.textColor = [185,28,28]; }
+  });
+  docSign(doc, W);
+  doc.save(`TARACHAND_MV_Attendance_${curMonth}.pdf`);
+}
+function exportExpPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  const fLp = state.factors.lp, fMe = state.factors.me;
+  docHeader(doc, W, 'Monthly Expenditure Statement',
+    `Rates: LP Rs.${fLp}/student   •   ME Rs.${fMe}/student   •   Saving = Total Entitled - Expenditure`);
+  const head = [
+    [ {content:'Date',rowSpan:2},{content:'Day',rowSpan:2},{content:'Class Day / Holiday',rowSpan:2},{content:'Reason (if Holiday)',rowSpan:2},
+      {content:'Expenditure (Rs.)',rowSpan:2},
+      {content:`LP Section (x Rs.${fLp})`,colSpan:2},{content:`ME Section (x Rs.${fMe})`,colSpan:2},
+      {content:'Total Entitled (Rs.)',rowSpan:2},{content:'Saving (Rs.)',rowSpan:2} ],
+    ['Total LP','LP Amount','Total ME','ME Amount']
+  ];
+  const m = state.months[curMonth], ex = state.exp[curMonth] || {};
+  const body = monthDates(curMonth).map(dt => {
+    const rec = m[isoOf(dt)], hol = rec.type === 'holiday';
+    const d = expRowData(rec);
+    if(hol) return [ pad(dt.getDate()), DAYNAMES[dt.getDay()], 'Holiday', rec.reason || '', '–', '–', '–', '–', '–', '–', '–' ];
+    const exp = (ex[isoOf(dt)] != null) ? fmt2(ex[isoOf(dt)]) : '';
+    if(!d || d.blank) return [ pad(dt.getDate()), DAYNAMES[dt.getDay()], 'Class Day', '—', exp, '', '', '', '', '', '' ];
+    const sv = r2(d.total - (ex[isoOf(dt)] == null ? 0 : ex[isoOf(dt)]));
+    return [ pad(dt.getDate()), DAYNAMES[dt.getDay()], 'Class Day', '—', exp,
+             String(d.s.lp), fmt2(d.lpAmt), String(d.s.me), fmt2(d.meAmt), fmt2(d.total), fmt2(sv) ];
+  });
+  const st = computeExpStats();
+  const foot = [[
+    {content:`MONTHLY TOTAL (${st.classDays} class days, ${st.holDays} holidays)`, colSpan:4, styles:{halign:'left'}},
+    fmt2(st.expT), String(st.lpSt), fmt2(st.lpAmt), String(st.meSt), fmt2(st.meAmt), fmt2(st.total), fmt2(st.saving)
+  ]];
+  doc.autoTable({
+    startY: 82, head, body, foot,
+    styles: { fontSize: 8, cellPadding: 3, halign: 'center', valign: 'middle', lineColor: [160,174,192], lineWidth: 0.4 },
+    headStyles: { fillColor: [30,58,138], textColor: 255, fontSize: 8, fontStyle: 'bold' },
+    footStyles: { fillColor: [241,245,249], textColor: 15, fontStyle: 'bold' },
+    columnStyles: { 0:{cellWidth:28}, 1:{cellWidth:28}, 2:{cellWidth:56}, 3:{cellWidth:92} },
+    didParseCell: d => {
+      if(d.section === 'body'){
+        if(d.row.raw[2] === 'Holiday') d.cell.styles.textColor = [185,28,28];
+        if(d.column.index === 10 && String(d.cell.raw).startsWith('-')) d.cell.styles.textColor = [185,28,28];
+      }
+    }
+  });
+  docSign(doc, W);
+  doc.save(`TARACHAND_MV_Expenditure_${curMonth}.pdf`);
+}
+$('#pdfBtn').onclick = () => {
+  const hasLib = window.jspdf && window.jspdf.jsPDF;
+  if(!hasLib){ window.print(); return; }       // offline fallback: browser print → Save as PDF
+  if(activePage === 'exp') exportExpPDF(); else exportAttPDF();
+};
+
+/* ================= DATABASE FILE (attendance-data.json) ================= */
+function dbObject(){
+  return {
+    app: 'tarachand-mv-school-register',
+    version: 1,
+    updated: state.savedAt || new Date().toISOString(),
+    factors: state.factors,
+    months: state.months,
+    exp: state.exp
+  };
+}
+function applyDB(j){
+  state.months  = j.months  || {};
+  state.exp     = j.exp     || {};
+  state.factors = Object.assign({ lp: 6.78, me: 10.17 }, j.factors || {});
+  state.savedAt = j.updated || new Date().toISOString();
+  $('#fLp').value = state.factors.lp;
+  $('#fMe').value = state.factors.me;
+  lsSave();
+  renderAll();
+}
+/* Save all data into attendance-data.json (downloads the file) */
+$('#syncBtn').onclick = () => {
+  lsSave();
+  const blob = new Blob([JSON.stringify(dbObject(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = DB_FILE;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 600);
+  toast('💾 attendance-data.json saved — put it in your GitHub folder, replacing the old one');
+};
+/* Load data from attendance-data.json */
+$('#loadBtn').onclick = () => $('#fileInput').click();
+$('#fileInput').addEventListener('change', e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try{
+      const j = JSON.parse(rd.result);
+      if(!j || typeof j !== 'object' || (!j.months && j.app !== 'tarachand-mv-school-register'))
+        throw new Error('not a valid database file');
+      const cnt = Object.keys(j.months || {}).length;
+      if(cnt && !confirm(`Load data from ${f.name} (${cnt} month${cnt > 1 ? 's' : ''})? This replaces current data.`)) return;
+      applyDB(j);
+      toast('📂 Data loaded from file ✓');
+    }catch(err){ toast('Load failed: ' + err.message, false); }
+  };
+  rd.onerror = () => toast('Could not read the file', false);
+  rd.readAsText(f);
+});
+/* Auto-load database file on startup when hosted online (GitHub Pages etc.) */
+async function autoLoadDB(){
+  try{
+    const r = await fetch(DB_FILE, { cache: 'no-store' });
+    if(!r.ok) return;
+    const j = await r.json();
+    if(!j || !j.months || !Object.keys(j.months).length) return;
+    const fT = Date.parse(j.updated || 0) || 0;
+    const lT = Date.parse(state.savedAt || 0) || 0;
+    if(fT > lT || lT === 0){ applyDB(j); toast('⟳ Synced latest data from attendance-data.json'); }
+  }catch(e){ /* file not reachable (opened from disk / offline) — local data stays */ }
+}
+
+/* ---------- init ---------- */
+(function init(){
+  lsLoad();
+  $('#fLp').value = state.factors.lp;
+  $('#fMe').value = state.factors.me;
+  const now = new Date();
+  $('#month').value = `${now.getFullYear()}-${pad(now.getMonth()+1)}`;
+  curMonth = $('#month').value;
+  renderAll();
+  autoLoadDB();            // pull latest from attendance-data.json if hosted online
+  window.addEventListener('beforeunload', lsSave);
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+</body>
+</html>
